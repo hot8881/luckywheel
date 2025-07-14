@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>hot8881.com</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap');
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Rubik', sans-serif;
+      background:
+        radial-gradient(circle at center, #00110a 0%, #002211 80%),
+        url('https://cdn-icons-png.flaticon.com/512/833/833314.png') center bottom no-repeat;
+      background-size: 120px 120px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      overflow-x: hidden;
+      user-select: none;
+      position: relative;
+    }
+
+    #langModal, #winModal {
+      z-index: 9999;
+    }
+
+    #pointer {
+      width: 8px;
+      height: 40px;
+      background: red;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateY(-210px);
+      border-radius: 4px;
+      z-index: 50;
+      box-shadow: 0 0 6px red;
+    }
+
+    #wheel {
+      position: relative;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      border: 10px solid #00ffc3;
+      margin-top: 40px;
+      box-shadow: 0 0 20px #00ffc3aa;
+      background: radial-gradient(circle at center, #004d33, #002211);
+    }
+
+    #wheelCanvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    #spinBtn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 110px;
+      height: 110px;
+      background-color: gold;
+      border: none;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 1.2rem;
+      box-shadow: 0 0 20px #ffbf00;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    #spinBtn span {
+      pointer-events: none;
+    }
+    #spinBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #winModal {
+      position: relative;
+      margin-top: 10px;
+      background: #004d33;
+      padding: 20px;
+      border-radius: 10px;
+      display: none;
+      color: #00ffc3;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div id="langModal">
+  <div>
+    <h2>Select Language</h2>
+    <button onclick="setLang('zh')">中文</button>
+    <button onclick="setLang('en')">English</button>
+    <button onclick="setLang('pt')">Português</button>
+    <button onclick="setLang('ja')">日本語</button>
+  </div>
+</div>
+
+<h1 id="title"></h1>
+<div id="wheel">
+  <canvas id="wheelCanvas" width="360" height="360"></canvas>
+  <button id="spinBtn" onclick="spin()"><span>Spin</span></button>
+</div>
+<div id="pointer"></div>
+<div id="winModal">
+  <div id="winText"></div>
+  <button onclick="goToHomepage()">Claim</button>
+</div>
+
+<script>
+  const langText = {
+    zh: {
+      title: 'DeFi 挖矿运势轮盘',
+      win: p => `🎉 恭喜，您获得 ${p}！`,
+      prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "谢谢参与"],
+      spinText: "轮动"
+    },
+    en: {
+      title: 'DeFi Mining Lucky Wheel',
+      win: p => `🎉 Congratulations! You won ${p}!`,
+      prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "Thank you"],
+      spinText: "Spin"
+    },
+    pt: {
+      title: 'Roleta da Sorte DeFi',
+      win: p => `🎉 Você ganhou ${p}!`,
+      prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "Obrigado"],
+      spinText: "Girar"
+    },
+    ja: {
+      title: 'DeFi ラッキールーレット',
+      win: p => `🎉 ${p} が当たりました！`,
+      prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "ありがとう"],
+      spinText: "回す"
+    }
+  };
+
+  let currentLang = 'en';
+  let prizes = langText.en.prizes;
+  let hasSpun = false;
+
+  function setLang(lang) {
+    currentLang = lang;
+    prizes = langText[lang].prizes;
+    document.getElementById('langModal').style.display = 'none';
+    document.getElementById('title').textContent = langText[lang].title;
+    document.querySelector('#spinBtn span').textContent = langText[lang].spinText;
+    drawWheel();
+  }
+
+  function drawWheel() {
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const arc = Math.PI * 2 / prizes.length;
+    const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#AAAAAA"];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < prizes.length; i++) {
+      ctx.beginPath();
+      ctx.fillStyle = colors[i];
+      ctx.moveTo(180, 180);
+      ctx.arc(180, 180, 180, arc * i, arc * (i + 1));
+      ctx.fill();
+      ctx.save();
+      ctx.translate(180, 180);
+      ctx.rotate(arc * (i + 0.5));
+      ctx.fillStyle = "white";
+      ctx.font = "bold 20px Rubik";
+      ctx.textAlign = "center";
+      ctx.fillText(prizes[i], 100, 10);
+      ctx.restore();
+    }
+  }
+
+  function spin() {
+    if (hasSpun) return;
+    hasSpun = true;
+    document.getElementById('spinBtn').disabled = true;
+
+    const wheel = document.getElementById('wheel');
+    const rand = Math.floor(Math.random() * prizes.length);
+    const angle = 360 * 5 + (360 / prizes.length) * rand + (360 / prizes.length) / 2;
+    wheel.style.transition = 'transform 4s ease-out';
+    wheel.style.transform = `rotate(${angle}deg)`;
+
+    setTimeout(() => {
+      document.getElementById('winText').textContent = langText[currentLang].win(prizes[rand]);
+      document.getElementById('winModal').style.display = 'block';
+    }, 4000);
+  }
+
+  function goToHomepage() {
+    window.location.href = 'https://hot8881.com';
+  }
+
+  drawWheel();
+</script>
+
+</body>
+</html>
