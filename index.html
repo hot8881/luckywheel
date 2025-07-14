@@ -1,0 +1,95 @@
+<script>
+  const langText = {
+    zh: { title: 'DeFi 挖矿幸运转盘', win: p => `🎉 恭喜，您获得 ${p}！`, prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "谢谢参与"], spinText: "转动", claim: "领取" },
+    en: { title: 'DeFi Mining Lucky Wheel', win: p => `🎉 Congratulations! You won ${p}!`, prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "Thank you"], spinText: "Spin", claim: "Claim" },
+    pt: { title: 'Roleta da Sorte DeFi', win: p => `🎉 Você ganhou ${p}!`, prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "Obrigado"], spinText: "Girar", claim: "Receber" },
+    ja: { title: 'DeFi ラッキールーレット', win: p => `🎉 ${p} が当たりました！`, prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "ありがとう"], spinText: "回す", claim: "受け取る" }
+  };
+
+  let currentLang = 'en';
+  let prizes = langText.en.prizes;
+  const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#AAAAAA"];
+
+  const prizeWeights = [50, 30, 15, 2, 1, 2]; // 对应 prizes 顺序
+
+  function drawWheel() {
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, 360, 360);
+    const arc = Math.PI * 2 / prizes.length;
+    for (let i = 0; i < prizes.length; i++) {
+      ctx.beginPath();
+      ctx.fillStyle = colors[i];
+      ctx.moveTo(180, 180);
+      ctx.arc(180, 180, 180, arc * i, arc * (i + 1));
+      ctx.fill();
+      ctx.save();
+      ctx.translate(180, 180);
+      ctx.rotate(arc * (i + 0.5));
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 20px Rubik";
+      ctx.shadowColor = "rgba(0,0,0,0.7)";
+      ctx.shadowBlur = 6;
+      ctx.fillText(prizes[i], 110, 10);
+      ctx.restore();
+    }
+  }
+
+  function setLang(lang) {
+    currentLang = lang;
+    prizes = langText[lang].prizes;
+    document.getElementById('langModal').style.display = 'none';
+    document.getElementById('title').textContent = langText[lang].title;
+    document.getElementById('spinText').textContent = langText[lang].spinText;
+    document.getElementById('claimBtn').textContent = langText[lang].claim;
+    drawWheel();
+  }
+
+  function getWeightedRandomIndex(weights) {
+    const total = weights.reduce((a, b) => a + b, 0);
+    const rand = Math.random() * total;
+    let sum = 0;
+    for (let i = 0; i < weights.length; i++) {
+      sum += weights[i];
+      if (rand < sum) return i;
+    }
+    return weights.length - 1;
+  }
+
+  function spin() {
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spinBtn');
+    spinBtn.disabled = true;
+    const prizeCount = prizes.length;
+    const prizeAngle = 360 / prizeCount;
+    const randomIndex = getWeightedRandomIndex(prizeWeights);
+    const stopAngle = 360 * 5 + (360 - (randomIndex * prizeAngle + prizeAngle / 2));
+    wheel.style.transition = 'transform 4s ease-out';
+    wheel.style.transform = `rotate(${stopAngle}deg)`;
+    setTimeout(() => {
+      const prize = prizes[randomIndex];
+      showPrize(prize);
+    }, 4000);
+  }
+
+  function showPrize(prize) {
+    const modal = document.getElementById('winModal');
+    document.getElementById('winText').textContent = langText[currentLang].win(prize);
+    modal.style.display = 'block';
+    modal.classList.add('blink');
+    setTimeout(() => modal.classList.remove('blink'), 1500);
+    document.getElementById('spinBtn').disabled = true;
+  }
+
+  function goToHomepage() {
+    window.location.href = 'https://hot8881.com';
+  }
+
+  window.addEventListener('load', () => {
+    const savedLang = localStorage.getItem("lang");
+    if (savedLang && langText[savedLang]) {
+      setLang(savedLang);
+    }
+  });
+</script>
