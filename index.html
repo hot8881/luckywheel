@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🎉 DeFi 挖矿幸运转盘</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap');
+
+    /* 背景带币圈主题图案和渐变 */
+    body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at center, #003322 0%, #00110a 90%),
+        repeating-radial-gradient(circle at center, transparent 0 20px, rgba(0,255,200,0.05) 20px 25px);
+      font-family: 'Rubik', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* 标题 */
+    h1 {
+      font-size: 2.6rem;
+      text-shadow: 0 0 12px #00ffc3;
+      margin: 20px 0 10px;
+      font-weight: 700;
+    }
+
+    /* 语言选择弹窗 */
+    #langModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    #langModal > div {
+      background: #0a2d1b;
+      border-radius: 12px;
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 0 30px #00ffc3aa;
+    }
+    #langModal h2 {
+      color: #00ffc3;
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 1.8rem;
+      text-shadow: 0 0 8px #00ffc3;
+    }
+    #langModal button {
+      background: #00ffc3;
+      border: none;
+      color: #003322;
+      font-weight: 700;
+      font-size: 1.2rem;
+      padding: 12px 28px;
+      margin: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00ffc3bb;
+      transition: background-color 0.3s ease;
+    }
+    #langModal button:hover {
+      background-color: #00e0b0;
+    }
+
+    /* 转盘容器 */
+    .wheel-container {
+      position: relative;
+      width: 420px;
+      height: 420px;
+      margin-top: 10px;
+      user-select: none;
+    }
+
+    /* 转盘画布 */
+    #wheelcanvas {
+      border-radius: 50%;
+      box-shadow:
+        0 0 20px #00ffc3,
+        inset 0 0 50px #00b38c;
+      background: radial-gradient(circle at center, #004d33 0%, #002211 90%);
+      transition: background 0.3s ease;
+    }
+
+    /* 彩灯环 */
+    .lights-ring {
+      pointer-events: none;
+      position: absolute;
+      top: -18px; left: -18px;
+      width: 456px; height: 456px;
+      border-radius: 50%;
+      box-shadow:
+        0 0 12px #00ffc3,
+        0 0 30px #00ffc3,
+        0 0 50px #00ffd3,
+        0 0 80px #00ffc3;
+      animation: pulseLights 3s infinite alternate;
+      z-index: 10;
+    }
+    @keyframes pulseLights {
+      0% {
+        box-shadow:
+          0 0 10px #00e0b0,
+          0 0 25px #00e0b0,
+          0 0 45px #00f0d0,
+          0 0 70px #00d6a9;
+      }
+      100% {
+        box-shadow:
+          0 0 20px #00ffc3,
+          0 0 40px #00ffc3,
+          0 0 60px #00ffd3,
+          0 0 90px #00ffc3;
+      }
+    }
+
+    /* 指针，朝下（向转盘中心） */
+    #pointer {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%) rotate(180deg);
+      width: 0; height: 0;
+      border-left: 25px solid transparent;
+      border-right: 25px solid transparent;
+      border-top: 50px solid #ff3c00;
+      filter: drop-shadow(0 0 8px rgba(255, 60, 0, 0.9));
+      z-index: 20;
+    }
+
+    /* 抽奖按钮 */
+    #spinbtn {
+      margin-top: 30px;
+      padding: 18px 50px;
+      font-size: 1.5rem;
+      background: linear-gradient(45deg, #ffbf00, #ffda47);
+      color: #333;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255, 191, 0, 0.8);
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    #spinbtn:hover:not(:disabled) {
+      background: linear-gradient(45deg, #ffd732, #fff45a);
+    }
+    #spinbtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* 抽奖结果 */
+    #result {
+      margin-top: 35px;
+      font-size: 1.6rem;
+      font-weight: 700;
+      min-height: 70px;
+      text-align: center;
+      text-shadow: 0 0 15px #ff8a00;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 语言选择弹窗 -->
+  <div id="langModal">
+    <div>
+      <h2>请选择您的语言 / Please select your language</h2>
+      <button onclick="setLang('zh')">中文</button>
+      <button onclick="setLang('en')">English</button>
+      <button onclick="setLang('pt')">Português</button>
+      <button onclick="setLang('ja')">日本語</button>
+    </div>
+  </div>
+
+  <!-- 页面标题 -->
+  <h1 id="title" style="display:none;"></h1>
+
+  <!-- 转盘 -->
+  <div class="wheel-container" style="display:none;">
+    <canvas id="wheelcanvas" width="420" height="420"></canvas>
+    <div class="lights-ring"></div>
+    <div id="pointer"></div>
+  </div>
+
+  <!-- 抽奖按钮 -->
+  <button id="spinbtn" style="display:none;"></button>
+
+  <!-- 抽奖结果 -->
+  <div id="result"></div>
+
+  <script>
+    const langData = {
+      zh: {
+        title: "DeFi 挖矿幸运转盘",
+        spinBtn: "点击抽奖",
+        resultPrefix: "恭喜您抽中",
+        prizes: ["5 USDT", "10 USDT", "30 USDT", "3天体验", "100 USDT", "谢谢参与"]
+      },
+      en: {
+        title: "DeFi Lucky Spin",
+        spinBtn: "SPIN 🎁",
+        resultPrefix: "Congratulations! You won:",
+        prizes: ["5 USDT", "10 USDT", "30 USDT", "3-Day Trial", "100 USDT", "Thanks for participating"]
+      },
+      pt: {
+        title: "DeFi Sorteio de Mineração",
+        spinBtn: "GIRAR 🎁",
+        resultPrefix: "Parabéns! Você ganhou:",
+        prizes: ["5 USDT", "10 USDT", "30 USDT", "Teste de 3 dias", "100 USDT", "Obrigado por participar"]
+      },
+      ja: {
+        title: "DeFi ラッキースピン",
+        spinBtn: "スピン 🎁",
+        resultPrefix: "おめでとうございます！獲得:",
+        prizes: ["5 USDT", "10 USDT", "30 USDT", "3日間トライアル", "100 USDT", "ご参加ありがとうございました"]
+      }
+    };
+
+    let selectedLang = null;
+
+    function setLang(lang) {
+      selectedLang = lang;
+      const langPack = langData[lang];
+      document.getElementById("langModal").style.display = "none";
+      document.getElementById("title").style.display = "block";
+      document.querySelector(".wheel-container").style.display = "block";
+      document.getElementById("spinbtn").style.display = "inline-block";
+      document.getElementById("title").textContent = langPack.title;
+      document.getElementById("spinbtn").textContent = langPack.spinBtn;
+      drawWheel(langPack.prizes);
+    }
+
+    const canvas = document.getElementById('wheelcanvas');
+    const ctx = canvas.getContext('2d');
+    const spinBtn = document.getElementById('spinbtn');
+    const resultEl = document.getElementById('result');
+    const segmentCount = 6;
+    const radius = 210; // 画布中心点（半径）
+    let angle = 0;
+    let spinning = false;
+
+    function drawWheel(prizes) {
+      const step = (2 * Math.PI) / segmentCount;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < segmentCount; i++) {
+        const start = angle + i * step;
+        const end = start + step;
+        ctx.beginPath();
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius - 10, start, end);
+        ctx.fillStyle = i % 2 === 0 ? '#009d77' : '#00664d';
+        ctx.fill();
+        // 文字
+        ctx.save();
+        ctx.translate(radius, radius);
+        ctx.rotate(start + step / 2);
+        ctx.fillStyle = '#fff';
+        ctx.font = '18px Rubik, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(prizes[i], radius - 25, 10);
+        ctx.restore();
+      }
+    }
+
+    function spinWheel() {
+      if (spinning) return;
+      if(localStorage.getItem("hasSpun")) {
+        alert("您已经抽过奖了，感谢参与！");
+        return;
+      }
+      spinning = true;
+      const langPack = langData[selectedLang];
+      const prizes = langPack.prizes;
+      const rndIndex = Math.floor(Math.random() * segmentCount);
+      const spins = 5; // 5圈转盘
+      const finalAngleDeg = 360 * spins + (360 / segmentCount) * rndIndex;
+      let currentDeg = 0;
+      const stepDeg = 15;
+      const interval = setInterval(() => {
+        currentDeg += stepDeg;
+        angle = (currentDeg * Math.PI) / 180;
+        drawWheel(prizes);
+        if (currentDeg >= finalAngleDeg) {
+          clearInterval(interval);
+          spinning = false;
+          const prize = prizes[rndIndex];
+          resultEl.textContent = `${langPack.resultPrefix} ${prize}`;
+          localStorage.setItem("hasSpun", "true");
+          spinBtn.disabled = true;
+        }
+      }, 20);
+    }
+
+    spinBtn.addEventListener('click', spinWheel);
+  </script>
+</body>
+</html>
