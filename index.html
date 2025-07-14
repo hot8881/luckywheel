@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>hot8881.com</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap');
+    html, body {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Rubik', sans-serif;
+      background: radial-gradient(circle at center, #00110a 0%, #002211 80%),
+        url('https://cdn-icons-png.flaticon.com/512/833/833314.png') center bottom no-repeat;
+      background-size: 120px 120px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      box-sizing: border-box;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    #langModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #langModal > div {
+      background: #0a2d1b;
+      border-radius: 12px;
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 0 30px #00ffc3aa;
+      max-width: 90%;
+    }
+
+    #langTitle {
+      font-size: 1.8rem;
+      color: #00ffc3;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    .langButtons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .langButtons button {
+      background: #00ffc3;
+      border: none;
+      color: #003322;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 130px;
+      justify-content: center;
+    }
+
+    .langButtons img {
+      width: 24px;
+      height: 16px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+
+    #title {
+      font-size: 2rem;
+      text-shadow: 0 0 12px #00ffc3;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      text-align: center;
+      word-break: keep-all;
+    }
+
+    #marquee {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      box-sizing: border-box;
+      padding: 12px 0;
+      background: #003322;
+      color: #00ffc3;
+      font-weight: 700;
+      font-size: 1rem;
+      border-radius: 8px;
+    }
+
+    #marquee span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 25s linear infinite;
+      will-change: transform;
+    }
+
+    @keyframes marquee {
+      0%   { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
+
+    .marquee-item {
+      display: inline-block;
+      margin: 0 30px;
+      white-space: nowrap;
+      padding: 4px 14px;
+      background: rgba(0, 255, 195, 0.15);
+      border-radius: 14px;
+      box-shadow: 0 0 8px #00ffc3aa;
+      user-select: none;
+    }
+
+    #wheelContainer { position: relative; width: 100%; max-width: 360px; margin: 20px auto; transform: translateX(-10px); }
+    #wheel { width: 100%; border-radius: 50%; border: 8px solid #00ffc3; background: radial-gradient(circle at center, #004d33, #002211); box-shadow: 0 0 20px #00ffc3aa; position: relative; z-index: 1; transition: transform 4s ease-out; transform: rotate(0deg); }
+    canvas#wheelCanvas { width: 100%; height: auto; display: block; }
+    #spinBtn { position: absolute; left: 50%; top: 50%; transform: translate(-45%, -50%); width: 70px; height: 70px; background-color: gold; border-radius: 50%; border: none; font-weight: 700; font-size: 1rem; box-shadow: 0 0 12px #ffbf00; z-index: 10; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; transition: background-color 0.3s ease; }
+    #pointer { position: absolute; left: calc(50% + 35px); top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 14px solid transparent; border-bottom: 14px solid transparent; border-left: 26px solid red; z-index: 11; pointer-events: none; filter: drop-shadow(0 0 2px #a00); }
+    #winModal { margin-top: 16px; padding: 16px 28px 24px; background: #004d33; color: #00ffc3; border-radius: 10px; box-shadow: 0 0 20px #00ffc3aa; display: none; text-align: center; }
+    #winModal.blink { animation: blink 0.15s alternate 8; }
+    @keyframes blink { from { box-shadow: 0 0 10px #ff0; } to { box-shadow: 0 0 30px #f00; } }
+    #winModal button { margin-top: 12px; background: #ffbf00; border: none; color: #333; font-weight: 700; border-radius: 8px; padding: 10px 24px; cursor: pointer; }
+    #screenshotTip { margin-top: 14px; font-size: 0.95rem; color: #ccc; }
+  </style>
+</head>
+<body onload="setLang('en')">
+  <!-- Rest of HTML structure remains the same as above -->
+
+  <script>
+    // Prize drawing logic same as above — only update font size in drawWheel
+    function drawWheel() {
+      const canvas = document.getElementById("wheelCanvas");
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = 720 * dpr;
+      canvas.height = 720 * dpr;
+      ctx.scale(dpr, dpr);
+      const arc = Math.PI * 2 / prizes.length;
+      ctx.clearRect(0, 0, 720, 720);
+      for (let i = 0; i < prizes.length; i++) {
+        ctx.beginPath();
+        ctx.fillStyle = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#AAAAAA"][i];
+        ctx.moveTo(360, 360);
+        ctx.arc(360, 360, 360, arc * i, arc * (i + 1));
+        ctx.fill();
+        ctx.save();
+        ctx.translate(360, 360);
+        ctx.rotate(arc * (i + 0.5));
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 26px Rubik"; // 增大字体
+        ctx.shadowColor = "rgba(0,0,0,0.7)";
+        ctx.shadowBlur = 6;
+        ctx.fillText(prizes[i], 220, 10);
+        ctx.restore();
+      }
+    }
+  </script>
+</body>
+</html>
