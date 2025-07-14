@@ -1,160 +1,221 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Roda da Sorte - DeFi Mineração</title>
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Rubik', sans-serif;
-      background: linear-gradient(to right, #00c6ff, #0072ff);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: start;
-      padding-top: 30px;
-      color: #fff;
-    }
-    h1 {
-      margin-bottom: 10px;
-      font-size: 28px;
-      font-weight: 700;
-    }
-    .wheel-container {
-      position: relative;
-    }
-    canvas {
-      background: #fff;
-      border-radius: 50%;
-    }
-    #spinbtn {
-      margin-top: 20px;
-      padding: 15px 35px;
-      font-size: 20px;
-      background: #ffcc00;
-      color: #333;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.2s;
-    }
-    #spinbtn:hover {
-      background: #ffd633;
-    }
-    #pointer {
-      width: 0;
-      height: 0;
-      border-left: 15px solid transparent;
-      border-right: 15px solid transparent;
-      border-bottom: 30px solid red;
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    #result {
-      font-size: 22px;
-      font-weight: bold;
-      margin-top: 25px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Roda da Sorte DeFi - Mineração</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  /* 页面整体样式 */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    font-family: 'Rubik', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 20px 60px;
+    color: #fff;
+  }
+  h1 {
+    margin: 0 0 8px 0;
+    font-weight: 700;
+    font-size: 32px;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.4);
+  }
+  p.subtitle {
+    margin: 0 0 30px 0;
+    font-weight: 400;
+    font-size: 18px;
+    opacity: 0.85;
+  }
+  /* 转盘容器，方便定位指针 */
+  .wheel-container {
+    position: relative;
+    width: 420px;
+    height: 420px;
+  }
+  canvas#wheelcanvas {
+    border-radius: 50%;
+    background: #fefefe;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+  /* 指针 - 顶部中心，向内指 */
+  #pointer {
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 35px solid #ff4444;
+    filter: drop-shadow(0 0 4px rgba(255, 0, 0, 0.8));
+    z-index: 10;
+  }
+  /* 抽奖按钮 */
+  #spinbtn {
+    margin-top: 25px;
+    padding: 15px 48px;
+    font-size: 22px;
+    background: #ffd700;
+    color: #333;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(255, 215, 0, 0.6);
+    transition: background-color 0.25s ease;
+  }
+  #spinbtn:hover {
+    background: #ffea00;
+  }
+  /* 结果显示 */
+  #result {
+    margin-top: 28px;
+    font-size: 24px;
+    font-weight: 700;
+    min-height: 40px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+</style>
 </head>
 <body>
 
   <h1>🎉 Roda da Sorte DeFi</h1>
-  <p>Gire e ganhe bônus de mineração USDT!</p>
+  <p class="subtitle">Gire e ganhe bônus exclusivos de mineração USDT!</p>
 
   <div class="wheel-container">
+    <canvas id="wheelcanvas" width="420" height="420"></canvas>
     <div id="pointer"></div>
-    <canvas id="wheelcanvas" width="400" height="400"></canvas>
   </div>
 
   <button id="spinbtn">GIRAR 🎁</button>
   <div id="result"></div>
 
-  <script>
-    const prizes = [
-      "5 USDT",
-      "10 USDT",
-      "30 USDT",
-      "Experiência 3 dias",
-      "100 USDT",
-      "Obrigado",
-      "Mineração 7 dias",
-      "1000 USDT"
-    ];
-    const colors = ["#f44336", "#e91e63", "#9c27b0", "#2196f3", "#4caf50", "#ff9800", "#00bcd4", "#8bc34a"];
+<script>
+  const prizes = [
+    "5 USDT",
+    "10 USDT",
+    "30 USDT",
+    "Experiência 3 dias",
+    "100 USDT",
+    "Obrigado",
+    "Mineração 7 dias",
+    "1000 USDT"
+  ];
+  const colors = [
+    "#f44336", "#e91e63", "#9c27b0", "#2196f3",
+    "#4caf50", "#ff9800", "#00bcd4", "#8bc34a"
+  ];
 
-    const canvas = document.getElementById("wheelcanvas");
-    const ctx = canvas.getContext("2d");
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 180;
-    const segmentAngle = (2 * Math.PI) / prizes.length;
+  const canvas = document.getElementById("wheelcanvas");
+  const ctx = canvas.getContext("2d");
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = 190;
+  const segmentCount = prizes.length;
+  const segmentAngle = (2 * Math.PI) / segmentCount;
 
-    let currentAngle = 0;
-    let isSpinning = false;
+  let currentAngle = 0;
+  let isSpinning = false;
 
-    function drawWheel(angle) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // 画转盘
+  function drawWheel(angle) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(angle);
+    for(let i = 0; i < segmentCount; i++){
+      // 画扇形
+      ctx.beginPath();
+      ctx.fillStyle = colors[i];
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, i*segmentAngle, (i+1)*segmentAngle);
+      ctx.closePath();
+      ctx.fill();
+
+      // 写文字
       ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(angle);
-      for (let i = 0; i < prizes.length; i++) {
-        ctx.beginPath();
-        ctx.fillStyle = colors[i];
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, radius, i * segmentAngle, (i + 1) * segmentAngle);
-        ctx.lineTo(0, 0);
-        ctx.fill();
+      // 旋转到扇形中心
+      ctx.rotate(i*segmentAngle + segmentAngle/2);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 16px Rubik";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
-        ctx.save();
-        ctx.rotate(i * segmentAngle + segmentAngle / 2);
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 16px Rubik";
-        ctx.textAlign = "center";
-        ctx.fillText(prizes[i], radius * 0.65, 0);
-        ctx.restore();
+      // 文字换行处理，若需要可以换成更复杂的绘制
+      const text = prizes[i];
+      const maxWidth = radius * 0.6;
+
+      // 简单断行（按空格分）
+      let lines = [];
+      if(text.length > 10){
+        lines = text.split(" ");
+      } else {
+        lines = [text];
+      }
+      const lineHeight = 18;
+      for(let j=0; j<lines.length; j++){
+        ctx.fillText(lines[j], radius * 0.55, (j - (lines.length-1)/2) * lineHeight);
       }
       ctx.restore();
     }
+    ctx.restore();
+  }
 
-    function spin() {
-      if (isSpinning) return;
-      isSpinning = true;
-      document.getElementById("result").textContent = "";
-      const spins = Math.floor(Math.random() * 4) + 4;
-      const randomIndex = Math.floor(Math.random() * prizes.length);
-      const finalAngle = (2 * Math.PI) * spins + randomIndex * segmentAngle + segmentAngle / 2;
+  // 缓动函数
+  function easeOut(t) {
+    return t*(2 - t);
+  }
 
-      let start = null;
-      function animate(timestamp) {
-        if (!start) start = timestamp;
-        const elapsed = timestamp - start;
-        const duration = 4000;
-        if (elapsed < duration) {
-          const progress = elapsed / duration;
-          const ease = progress * (2 - progress);
-          currentAngle = finalAngle * ease;
-          drawWheel(currentAngle);
-          requestAnimationFrame(animate);
-        } else {
-          currentAngle = finalAngle;
-          drawWheel(currentAngle);
-          const prize = prizes[randomIndex];
-          document.getElementById("result").textContent = "🎊 Você ganhou: " + prize;
-          setTimeout(() => {
-            window.location.href = "http://hot8881.com";
-          }, 3000);
-          isSpinning = false;
-        }
+  // 旋转函数
+  function spin(){
+    if(isSpinning) return;
+    isSpinning = true;
+    document.getElementById("result").textContent = "";
+
+    const spins = Math.floor(Math.random()*4) + 5;  // 5~8圈
+    const chosenIndex = Math.floor(Math.random()*segmentCount);
+
+    // 最终角度，转盘旋转方向是顺时针，所以角度要反向
+    const finalAngle = (2*Math.PI)*spins - (chosenIndex*segmentAngle + segmentAngle/2);
+
+    let start = null;
+    function animate(timestamp){
+      if(!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const duration = 4500;
+      if(elapsed < duration){
+        const progress = elapsed/duration;
+        currentAngle = easeOut(progress)*finalAngle;
+        drawWheel(currentAngle);
+        requestAnimationFrame(animate);
+      } else {
+        currentAngle = finalAngle;
+        drawWheel(currentAngle);
+        // 显示结果
+        const prize = prizes[chosenIndex];
+        document.getElementById("result").textContent = `🎊 Você ganhou: ${prize}`;
+        // 3秒后跳转
+        setTimeout(()=>{
+          window.location.href = "http://hot8881.com";
+        },3000);
+        isSpinning = false;
       }
-      requestAnimationFrame(animate);
     }
+    requestAnimationFrame(animate);
+  }
 
-    drawWheel(0);
-    document.getElementById("spinbtn").addEventListener("click", spin);
-  </s
+  // 初始化画转盘
+  drawWheel(0);
+
+  // 绑定按钮事件
+  document.getElementById("spinbtn").addEventListener("click", spin);
+</script>
+
+</body>
+</html>
