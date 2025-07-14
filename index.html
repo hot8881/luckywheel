@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>hot8881.com</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Rubik', sans-serif;
+      background: radial-gradient(circle at center, #002211 0%, #00110a 70%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #langModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #langModal > div {
+      background: #0a2d1b;
+      border-radius: 12px;
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 0 30px #00ffc3aa;
+    }
+
+    #langModal h2 {
+      color: #00ffc3;
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 1.8rem;
+    }
+
+    #langModal button {
+      background: #00ffc3;
+      border: none;
+      color: #003322;
+      font-weight: 700;
+      font-size: 1.2rem;
+      padding: 12px 28px;
+      margin: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #title {
+      font-size: 2.6rem;
+      text-shadow: 0 0 12px #00ffc3;
+      margin: 20px 0 10px;
+      font-weight: 700;
+      display: none;
+    }
+
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 40px solid red;
+      position: absolute;
+      top: 80px;
+      z-index: 20;
+    }
+
+    #wheel {
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      border: 10px solid #00ffc3;
+      margin: 20px 0;
+      transition: transform 4s ease-out;
+      display: none;
+      position: relative;
+    }
+
+    #wheel canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    #spinBtn {
+      font-size: 1.2rem;
+      padding: 12px 30px;
+      background-color: gold;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
+
+    #result {
+      font-size: 1.5rem;
+      margin-top: 20px;
+      text-shadow: 0 0 10px orange;
+      min-height: 40px;
+    }
+
+    #winModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+    }
+
+    #winModalContent {
+      background: #004d33;
+      border-radius: 15px;
+      padding: 30px 40px;
+      box-shadow: 0 0 40px #00ffc3aa;
+      text-align: center;
+      color: #00ffc3;
+      font-weight: 700;
+      font-size: 1.6rem;
+      max-width: 90vw;
+    }
+
+    #winModalContent button {
+      margin-top: 25px;
+      background: #ffbf00;
+      color: #333;
+      font-weight: 700;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+
+<div id="langModal">
+  <div>
+    <h2>请选择您的语言 / Please select your language</h2>
+    <button onclick="setLang('zh')">中文</button>
+    <button onclick="setLang('en')">English</button>
+    <button onclick="setLang('pt')">Português</button>
+    <button onclick="setLang('ja')">日本語</button>
+  </div>
+</div>
+
+<div id="pointer"></div>
+<h1 id="title"></h1>
+<div id="wheel"><canvas id="wheelCanvas" width="360" height="360"></canvas></div>
+<button id="spinBtn" onclick="spin()">Spin</button>
+<div id="result"></div>
+
+<div id="winModal">
+  <div id="winModalContent">
+    <div id="winText">🎉</div>
+    <button onclick="goToHomepage()">领取 / Claim</button>
+  </div>
+</div>
+
+<script>
+  const langText = {
+    zh: { title: 'DeFi 挖矿幸运转盘', win: p => `🎉 恭喜，您获得 ${p}！` },
+    en: { title: 'DeFi Mining Lucky Wheel', win: p => `🎉 Congratulations! You won ${p}!` },
+    pt: { title: 'Roleta da Sorte DeFi', win: p => `🎉 Você ganhou ${p}!` },
+    ja: { title: 'DeFi ラッキールーレット', win: p => `🎉 ${p} が当たりました！` }
+  };
+  let currentLang = 'en';
+  const prizes = ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "谢谢参与"];
+  const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#CCCCCC"];
+
+  function drawWheel() {
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const arc = Math.PI * 2 / prizes.length;
+    for (let i = 0; i < prizes.length; i++) {
+      ctx.beginPath();
+      ctx.fillStyle = colors[i];
+      ctx.moveTo(180, 180);
+      ctx.arc(180, 180, 180, arc * i, arc * (i + 1));
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(180, 180);
+      ctx.rotate(arc * (i + 0.5));
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 16px Rubik";
+      ctx.fillText(prizes[i], 160, 10);
+      ctx.restore();
+    }
+  }
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.getElementById('langModal').style.display = 'none';
+    document.getElementById('title').textContent = langText[lang].title;
+    document.getElementById('title').style.display = 'block';
+    document.getElementById('wheel').style.display = 'block';
+    document.getElementById('spinBtn').style.display = 'inline-block';
+    drawWheel();
+  }
+
+  function spin() {
+    const deg = 360 * 5 + Math.floor(Math.random() * 360);
+    document.getElementById('wheel').style.transform = `rotate(${deg}deg)`;
+
+    const index = Math.floor(((deg % 360) / 360) * prizes.length);
+    const prize = prizes[(prizes.length - index) % prizes.length];
+
+    document.getElementById('spinBtn').disabled = true;
+    setTimeout(() => {
+      document.getElementById('winModal').style.display = 'flex';
+      document.getElementById('winText').textContent = langText[currentLang].win(prize);
+      document.getElementById('spinBtn').disabled = false;
+    }, 4000);
+  }
+
+  function goToHomepage() {
+    window.location.href = 'https://hot8881.com';
+  }
+</script>
+
+</body>
+</html>
