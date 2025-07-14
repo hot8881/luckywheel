@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>精准转盘抽奖</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    .wheel-wrapper {
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #FF9F1C 0deg 60deg,
+        #2EC4B6 60deg 120deg,
+        #E71D36 120deg 180deg,
+        #011627 180deg 240deg,
+        #FFBF69 240deg 300deg,
+        #6A0572 300deg 360deg
+      );
+      position: relative;
+      transition: transform 4s ease-out;
+      margin: 0 auto;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 30px solid red;
+      z-index: 10;
+    }
+
+    .spin-button {
+      margin-top: 30px;
+      padding: 10px 25px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      background-color: #28a745;
+      color: white;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .wheel-wrapper {
+        width: 300px;
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="pointer"></div>
+    <div class="wheel-wrapper" id="wheel"></div>
+    <button class="spin-button" onclick="spin()">点击抽奖</button>
+  </div>
+
+  <script>
+    const prizes = ['一等奖', '二等奖', '三等奖', '谢谢参与', '四等奖', '五等奖'];
+    const wheel = document.getElementById('wheel');
+    let currentAngle = 0;
+
+    function spin() {
+      const prizeIndex = Math.floor(Math.random() * prizes.length); // 抽取奖项
+      const baseAngle = 360 / prizes.length;
+      const randomOffset = Math.floor(Math.random() * baseAngle * 0.8); // 稍微随机一点，避免每次都正中间
+      const targetAngle = 360 * 5 + (360 - (prizeIndex * baseAngle + randomOffset)); // 转5圈 + 奖项偏移
+
+      currentAngle += targetAngle;
+      wheel.style.transform = `rotate(${currentAngle}deg)`;
+
+      // 等转动结束后显示弹窗（与 CSS transition 时间一致）
+      setTimeout(() => {
+        alert(`🎉 恭喜你获得：${prizes[prizeIndex]}！`);
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
