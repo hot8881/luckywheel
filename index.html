@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>hot8881.com</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Rubik', sans-serif;
+      background: radial-gradient(circle at center, #002211 0%, #00110a 70%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #langModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #langModal > div {
+      background: #0a2d1b;
+      border-radius: 12px;
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 0 30px #00ffc3aa;
+    }
+
+    #langModal h2 {
+      color: #00ffc3;
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 1.8rem;
+    }
+
+    #langModal button {
+      background: #00ffc3;
+      border: none;
+      color: #003322;
+      font-weight: 700;
+      font-size: 1.2rem;
+      padding: 12px 28px;
+      margin: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #title {
+      font-size: 2rem;
+      text-shadow: 0 0 12px #00ffc3;
+      margin-top: 25px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 16px solid transparent;
+      border-right: 16px solid transparent;
+      border-top: 40px solid red;
+      position: relative;
+      top: 10px;
+      z-index: 10;
+    }
+
+    #wheel {
+      width: 80vw;
+      max-width: 360px;
+      height: 80vw;
+      max-height: 360px;
+      border-radius: 50%;
+      border: 10px solid #00ffc3;
+      margin: 10px 0;
+      transition: transform 4s ease-out;
+      position: relative;
+    }
+
+    #wheel canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    #spinBtn {
+      font-size: 1.2rem;
+      padding: 12px 30px;
+      background-color: gold;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    #resultText {
+      font-size: 1.3rem;
+      margin-top: 20px;
+      font-weight: bold;
+      color: #ffeb3b;
+      text-shadow: 0 0 6px #000;
+    }
+
+    #winModal {
+      position: relative;
+      margin-top: 20px;
+      background: #004d33;
+      border-radius: 12px;
+      padding: 16px 28px;
+      box-shadow: 0 0 20px #00ffc3aa;
+      text-align: center;
+      color: #00ffc3;
+      font-weight: 700;
+      font-size: 1.2rem;
+      display: none;
+    }
+
+    #winModal button {
+      margin-top: 12px;
+      background: #ffbf00;
+      color: #333;
+      font-weight: 700;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .glow-text {
+      fill: white;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 0 0 6px #fff, 0 0 8px #00ffc3;
+    }
+  </style>
+</head>
+<body>
+
+<div id="langModal">
+  <div>
+    <h2>请选择您的语言 / Please select your language</h2>
+    <button onclick="setLang('zh')">中文</button>
+    <button onclick="setLang('en')">English</button>
+    <button onclick="setLang('pt')">Português</button>
+    <button onclick="setLang('ja')">日本語</button>
+  </div>
+</div>
+
+<h1 id="title"></h1>
+<div id="pointer"></div>
+<div id="wheel"><canvas id="wheelCanvas" width="360" height="360"></canvas></div>
+<button id="spinBtn" onclick="spin()">Spin</button>
+<div id="resultText"></div>
+<div id="winModal">
+  <div id="winText">🎉</div>
+  <button onclick="goToHomepage()">领取 / Claim</button>
+</div>
+
+<script>
+  const langText = {
+    zh: {
+      title: 'DeFi 挖矿幸运转盘',
+      win: p => `🎉 恭喜，您获得 ${p}！`,
+      prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "谢谢参与"]
+    },
+    en: {
+      title: 'DeFi Mining Lucky Wheel',
+      win: p => `🎉 Congratulations! You won ${p}!`,
+      prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "Thank you"]
+    },
+    pt: {
+      title: 'Roleta da Sorte DeFi',
+      win: p => `🎉 Você ganhou ${p}!`,
+      prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "Obrigado"]
+    },
+    ja: {
+      title: 'DeFi ラッキールーレット',
+      win: p => `🎉 ${p} が当たりました！`,
+      prizes: ["5 USDT", "10 USDT", "20 USDT", "50 USDT", "100 USDT", "ありがとう"]
+    }
+  };
+
+  let currentLang = 'en';
+  const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#AAAAAA"];
+  let prizes = langText.en.prizes;
+
+  function drawWheel() {
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, 360, 360);
+    const arc = Math.PI * 2 / prizes.length;
+
+    for (let i = 0; i < prizes.length; i++) {
+      ctx.beginPath();
+      ctx.fillStyle = colors[i];
+      ctx.moveTo(180, 180);
+      ctx.arc(180, 180, 180, arc * i, arc * (i + 1));
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(180, 180);
+      ctx.rotate(arc * (i + 0.5));
+      ctx.textAlign = "right";
+      ctx.fillStyle = "white";
+      ctx.font = "bold 18px Rubik";
+      ctx.shadowColor = "#000";
+      ctx.shadowBlur = 5;
+      ctx.fillText(prizes[i], 160, 10);
+      ctx.restore();
+    }
+  }
+
+  function setLang(lang) {
+    currentLang = lang;
+    prizes = langText[lang].prizes;
+    document.getElementById('langModal').style.display = 'none';
+    document.getElementById('title').textContent = langText[lang].title;
+    document.getElementById('title').style.display = 'block';
+    document.getElementById('wheel').style.display = 'block';
+    document.getElementById('spinBtn').style.display = 'inline-block';
+    drawWheel();
+  }
+
+  function spin() {
+    const wheel = document.getElementById('wheel');
+    const deg = 360 * 5 + Math.floor(Math.random() * 360);
+    wheel.style.transform = `rotate(${deg}deg)`;
+    const index = Math.floor(((360 - (deg % 360)) % 360) / (360 / prizes.length));
+    const prize = prizes[index];
+
+    document.getElementById('spinBtn').disabled = true;
+    setTimeout(() => {
+      document.getElementById('winText').textContent = langText[currentLang].win(prize);
+      document.getElementById('winModal').style.display = 'block';
+      document.getElementById('resultText').textContent = langText[currentLang].win(prize);
+      document.getElementById('resultText').style.display = 'block';
+      document.getElementById('spinBtn').disabled = false;
+    }, 4000);
+  }
+
+  function goToHomepage() {
+    window.location.href = 'https://hot8881.com';
+  }
+</script>
+
+</body>
+</html>
