@@ -1,41 +1,60 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Defi mineração sorteio da roda da sorte</title>
+<meta charset="UTF-8">
+<title>Defi mineração - Roda da Sorte</title>
 <style>
-  body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-  #wheelcanvas { margin: 20px auto; display: block; }
-  #spinbtn { padding: 15px 40px; font-size: 18px; background-color: #ff6600; border: none; color: white; border-radius: 5px; cursor: pointer; }
-  #result { margin-top: 20px; font-size: 24px; font-weight: bold; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    background-color: #f8f8f8;
+    padding: 20px;
+  }
+  canvas {
+    margin-top: 20px;
+  }
+  #spinbtn {
+    margin-top: 20px;
+    padding: 15px 40px;
+    font-size: 20px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #result {
+    margin-top: 20px;
+    font-size: 24px;
+    color: #333;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
 
-<h1>Defi mineração - Roda da Sorte</h1>
-<canvas id="wheelcanvas" width="500" height="500"></canvas>
-<br />
+<h1>🎁 Roda da Sorte DeFi</h1>
+<canvas id="wheelcanvas" width="400" height="400"></canvas>
+<br>
 <button id="spinbtn">Girar a roda 🎉</button>
 <div id="result"></div>
 
 <script>
 const prizes = [
-  "5 USDT de recompensa",
-  "100 USDT de recompensa",
-  "1000 USDT de recompensa",
-  "Obrigado por participar",
-  "Experiência de mineração por 3 dias",
-  "Experiência de mineração por 30 dias"
+  "5 USDT",
+  "100 USDT",
+  "1000 USDT",
+  "Obrigado",
+  "3 dias grátis",
+  "30 dias grátis"
 ];
-
-const colors = ["#f44336", "#e91e63", "#9c27b0", "#2196f3", "#009688", "#ff9800"];
+const colors = ["#f44336", "#ff9800", "#4caf50", "#2196f3", "#9c27b0", "#009688"];
 
 const canvas = document.getElementById("wheelcanvas");
 const ctx = canvas.getContext("2d");
 const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
-const radius = 200;
+const radius = 180;
 const segmentAngle = (2 * Math.PI) / prizes.length;
 
 let currentAngle = 0;
@@ -54,22 +73,22 @@ function drawWheel(angle) {
     ctx.lineTo(0, 0);
     ctx.fill();
 
-    ctx.fillStyle = "#fff";
-    ctx.font = "16px Arial";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
     ctx.save();
     ctx.rotate(i * segmentAngle + segmentAngle / 2);
-    ctx.fillText(prizes[i], radius - 10, 0);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 18px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(prizes[i], radius * 0.65, 0);
     ctx.restore();
   }
   ctx.restore();
 
   ctx.fillStyle = "black";
   ctx.beginPath();
-  ctx.moveTo(centerX - 10, centerY - radius - 20);
-  ctx.lineTo(centerX + 10, centerY - radius - 20);
-  ctx.lineTo(centerX, centerY - radius - 5);
+  ctx.moveTo(centerX - 10, centerY - radius - 10);
+  ctx.lineTo(centerX + 10, centerY - radius - 10);
+  ctx.lineTo(centerX, centerY - radius + 5);
   ctx.closePath();
   ctx.fill();
 }
@@ -97,12 +116,12 @@ function spin() {
       drawWheel(currentAngle);
       setTimeout(() => {
         const prize = prizes[randomIndex];
-        document.getElementById("result").textContent = "Parabéns! Você ganhou: " + prize;
+        document.getElementById("result").textContent = "🎉 Você ganhou: " + prize;
         setTimeout(() => {
           window.location.href = "http://hot8881.com";
         }, 3000);
         isSpinning = false;
-      }, 500);
+      }, 300);
     }
   }
   requestAnimationFrame(animate);
@@ -113,7 +132,6 @@ function easeOut(t) {
 }
 
 drawWheel(0);
-
 document.getElementById("spinbtn").addEventListener("click", spin);
 </script>
 
